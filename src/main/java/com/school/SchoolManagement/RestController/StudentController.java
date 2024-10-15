@@ -16,7 +16,7 @@ public class StudentController {
     @Autowired
     private StudentImpl studentImpl;
 
-    @GetMapping("/get")
+    @PostMapping("/get")
     public ResponseEntity<List<StudentResponse>> getAll(){
         List<StudentResponse> students = studentImpl.findAllStudent();
         return ResponseEntity.ok(students);

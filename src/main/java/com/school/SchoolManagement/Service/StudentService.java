@@ -73,8 +73,6 @@ public class StudentService implements StudentImpl {
         student.setAddress(request.getAddress());
         student.setPhone(request.getPhone());
         student.setGradeLevel(request.getGradeLevel());
-        student.setUsername(request.getUsername());
-        student.setEmail(request.getEmail());
         student.setPassword(request.getPassword());
     }
 
