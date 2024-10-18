@@ -2,30 +2,25 @@ package com.school.SchoolManagement.Entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Student {
+@Table(name = "user", uniqueConstraints = @UniqueConstraint(columnNames = {"role", "refId"}))
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String firstName;
-    private String lastName;
-    private Date dob;
-    private Date enrollmentDate;
-    private String gender;
-    private String address;
-    private String phone;
-    private Float gradeLevel;
-    private Boolean status;
 
-    private String username;
     private String email;
     private String password;
+    private Boolean status;
+    private Role role;
+    private Long refId;
 }
+
+

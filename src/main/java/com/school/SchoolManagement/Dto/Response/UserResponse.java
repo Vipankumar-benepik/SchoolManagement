@@ -1,21 +1,17 @@
 package com.school.SchoolManagement.Dto.Response;
 
+import com.school.SchoolManagement.Entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AdminResponse {
+@Data
+public class UserResponse {
     private Long id;
-    private String adminName;
-    private String gender;
-    private String address;
-    private String phone;
-    private Date dob;
 
     private String email;
+    private Role role;
+    private Long refId;
 }

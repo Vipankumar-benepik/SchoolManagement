@@ -28,8 +28,8 @@ public class StudentController {
             StudentResponse student = studentImpl.findById(id);
             return ResponseEntity.ok(student);
         }
-        catch (Exception e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        catch (RuntimeException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -50,7 +50,7 @@ public class StudentController {
             else{
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not Update");
             }
-        }catch (Exception e){
+        }catch (RuntimeException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
@@ -64,7 +64,7 @@ public class StudentController {
             }
             studentImpl.deleteStudent(id);
             return ResponseEntity.status(HttpStatus.ACCEPTED).body("Student Deleted Successfully!");
-        }catch (Exception e){
+        }catch (RuntimeException e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
