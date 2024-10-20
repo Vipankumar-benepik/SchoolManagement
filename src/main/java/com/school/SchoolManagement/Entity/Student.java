@@ -15,8 +15,8 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String firstName;
-    private String lastName;
+
+    private String studentName;
     private Date dob;
     private Date enrollmentDate;
     private String gender;
@@ -25,7 +25,5 @@ public class Student {
     private Float gradeLevel;
     private Boolean status;
 
-    private String username;
     private String email;
-    private String password;
 }

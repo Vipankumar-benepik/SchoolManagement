@@ -17,19 +17,24 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sm/user")
+@RequestMapping("/api/auth")
 public class UserController {
     @Autowired
     private UserImpl userImpl;
 
     @PostMapping("/get")
     public ResponseEntity<BaseApiResponse> getAll(){
-        BaseApiResponse baseApiResponse = userImpl.findAllUser();
-        if(baseApiResponse.getSuccess() ==1){
-            return ResponseEntity.ok(baseApiResponse);
-        }
-        else{
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseApiResponse);
+        try{
+            BaseApiResponse baseApiResponse = userImpl.findAllUser();
+            if(baseApiResponse.getSuccess() ==1){
+                return ResponseEntity.ok(baseApiResponse);
+            }
+            else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseApiResponse);
+            }
+        } catch (Exception e) {
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
@@ -63,7 +68,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/create")
+    @PostMapping("/register")
     public ResponseEntity<BaseApiResponse> createOrUpdate(@RequestBody UserRequest request) {
         try {
             BaseApiResponse baseApiResponse = userImpl.createOrUpdateUser(request);

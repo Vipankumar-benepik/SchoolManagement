@@ -5,8 +5,10 @@ import com.school.SchoolManagement.Dto.Request.AdminRequest;
 import com.school.SchoolManagement.Dto.Response.AdminResponse;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Entity.Admin;
+import com.school.SchoolManagement.Entity.User;
 import com.school.SchoolManagement.Implementation.AdminImpl;
 import com.school.SchoolManagement.Repository.AdminRepository;
+import com.school.SchoolManagement.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,8 @@ public class AdminService implements AdminImpl {
 
     @Autowired
     private AdminRepository adminRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public BaseApiResponse findAllAdmin() {
         try {
@@ -47,7 +51,7 @@ public class AdminService implements AdminImpl {
                 return new BaseApiResponse("200", 1, "Fetch Successful", admin);
             }
             else {
-                return new BaseApiResponse("404", 1, "Not Found", Collections.emptyList());
+                return new BaseApiResponse("404", 1, "Admin not Found", Collections.emptyList());
             }
         } catch (Exception e) {
             if(e.getMessage().equals("Admin not Found")){
@@ -64,7 +68,7 @@ public class AdminService implements AdminImpl {
                 return new BaseApiResponse("200", 1, "Fetch Successful", admin);
             }
 
-            return new BaseApiResponse("404", 1, "Not Found", Collections.emptyList());
+            return new BaseApiResponse("404", 1, "Admin not Found", Collections.emptyList());
         } catch (Exception e) {
             return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
         }
@@ -132,7 +136,7 @@ public class AdminService implements AdminImpl {
                 return new BaseApiResponse("202", 1, "Deleted Successfully", admin);
             }
             else{
-                return new BaseApiResponse("404", 0, "Not Found", admin);
+                return new BaseApiResponse("404", 0, "Admin not Found", admin);
             }
 
         }
@@ -150,7 +154,7 @@ public class AdminService implements AdminImpl {
                 return new BaseApiResponse("202", 0, "Deleted Successfully", admin);
             }
             else{
-                return new BaseApiResponse("404", 0, "Not Found", admin);
+                return new BaseApiResponse("404", 0, "Admin not Found", admin);
             }
 
         }
@@ -165,7 +169,7 @@ public class AdminService implements AdminImpl {
         admin.setAddress(request.getAddress());
         admin.setPhone(request.getPhone());
         admin.setDob(request.getDob());
-        admin.setPassword(request.getPassword());
+//        admin.setPassword(request.getPassword());
     }
 
     private AdminResponse mapToResponse(Admin admin) {
@@ -189,8 +193,7 @@ public class AdminService implements AdminImpl {
                 request.getPhone(),
                 request.getDob(),
                 true,
-                request.getEmail(),
-                request.getPassword()
+                request.getEmail()
         );
     }
 

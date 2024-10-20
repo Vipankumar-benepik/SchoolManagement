@@ -51,11 +51,11 @@ public class UserService implements UserImpl {
                 return new BaseApiResponse("200", 1, "Fetch Successful ID", user);
             }
             else {
-                return new BaseApiResponse("404", 1, "Not Found", Collections.emptyList());
+                return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
             }
         } catch (Exception e) {
             if(e.getMessage().equals("User not Found")){
-                return new BaseApiResponse("404", 1, "Not Found", Collections.emptyList());
+                return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
             }
             return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
         }
@@ -68,7 +68,7 @@ public class UserService implements UserImpl {
                 return new BaseApiResponse("200", 1, "Fetch Successful", user);
             }
 
-            return new BaseApiResponse("404", 1, "Not Found", Collections.emptyList());
+            return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
         } catch (Exception e) {
             return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
         }
@@ -95,23 +95,31 @@ public class UserService implements UserImpl {
             if (userRequest.getId() == null || userRequest.getId() == 0) {
                 if(userRequest.getRole().equals(Role.ADMIN)){
                     Admin existingAdmin = adminRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Admin not Found"));
-                    if(existingAdmin != null){
+                    if(existingAdmin != null && existingAdmin.getEmail().equals(userRequest.getEmail())){
+                        user.setEmail(existingAdmin.getEmail());
                         userRepository.save(user);
                         return new BaseApiResponse("201", 1, "Created", user);
                     }
                     else{
-                        return new BaseApiResponse("404", 0, "Admin Id "+ existingAdmin.getId() +" not available", user);
+                        if(!existingAdmin.getEmail().equals(userRequest.getEmail())){
+                            return new BaseApiResponse("404", 0, "Admin Email "+ userRequest.getEmail() +" not available", Collections.emptyList());
+                        }
+                        return new BaseApiResponse("404", 0, "Admin Id "+ userRequest.getId() +" not available", user);
                     }
                 }
 
                 else if(userRequest.getRole().equals(Role.STUDENT)){
-                    Student existingStudent= studentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Student not Found"));
-                    if(existingStudent != null){
+                    Student existingStudent = studentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Student not Found"));
+                    if(existingStudent != null && existingStudent.getEmail().equals(userRequest.getEmail())){
+                        user.setEmail(existingStudent.getEmail());
                         userRepository.save(user);
                         return new BaseApiResponse("201", 1, "Created", user);
                     }
                     else{
-                        return new BaseApiResponse("409", 0, "User Id "+ existingStudent.getId() +" not available", user);
+                        if(!existingStudent.getEmail().equals(userRequest.getEmail())){
+                            return new BaseApiResponse("404", 0, "Student Email "+ userRequest.getEmail() +" not available", Collections.emptyList());
+                        }
+                        return new BaseApiResponse("404", 0, "Student Id "+ userRequest.getId() +" not available", user);
                     }
                 }
 
@@ -127,7 +135,7 @@ public class UserService implements UserImpl {
                 }
             }
 
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse("406", 0, "Not Acceptable", Collections.emptyList());
 
         } catch (Exception e) {
             if(e.getMessage().equals("Student not Found")){
@@ -148,7 +156,7 @@ public class UserService implements UserImpl {
                 return new BaseApiResponse("202", 1, "Deleted Successfully", user);
             }
             else{
-                return new BaseApiResponse("404", 0, "Not Found", user);
+                return new BaseApiResponse("404", 0, "User not Found", user);
             }
 
         }
@@ -166,7 +174,7 @@ public class UserService implements UserImpl {
                 return new BaseApiResponse("202", 0, "Deleted Successfully", user);
             }
             else{
-                return new BaseApiResponse("404", 0, "Not Found", user);
+                return new BaseApiResponse("404", 0, "User not Found", user);
             }
 
         }
@@ -193,7 +201,7 @@ public class UserService implements UserImpl {
     private User mapToEntity(UserRequest request) {
         return new User(
                 null,
-                request.getEmail(),
+                null,
                 request.getPassword(),
                 true,
                 request.getRole(),
