@@ -1,13 +1,16 @@
 package com.school.SchoolManagement.RestController;
 
+import ch.qos.logback.core.util.StringUtil;
+import com.school.SchoolManagement.Dto.Request.SearchRequest;
 import com.school.SchoolManagement.Dto.Request.StudentRequest;
-import com.school.SchoolManagement.Dto.Response.StudentResponse;
+import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.StudentImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -17,55 +20,109 @@ public class StudentController {
     private StudentImpl studentImpl;
 
     @PostMapping("/get")
-    public ResponseEntity<List<StudentResponse>> getAll(){
-        List<StudentResponse> students = studentImpl.findAllStudent();
-        return ResponseEntity.ok(students);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id){
+    public ResponseEntity<BaseApiResponse> getAll(){
         try{
-            StudentResponse student = studentImpl.findById(id);
-            return ResponseEntity.ok(student);
-        }
-        catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/set")
-    public ResponseEntity<StudentResponse> create(@RequestBody StudentRequest studentRequest){
-        StudentResponse studentResponse = studentImpl.createStudent(studentRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(studentResponse);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id,@RequestBody StudentRequest studentRequest){
-        try{
-            StudentResponse existingStudent = studentImpl.findById(id);
-            if(existingStudent != null){
-                studentImpl.updateStudent(id, studentRequest);
-                return ResponseEntity.ok("Student Updated Successfully!");
+            BaseApiResponse students = studentImpl.findAllStudent();
+            if(students.getSuccess() ==1){
+                return ResponseEntity.ok(students);
             }
             else{
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not Update");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(students);
             }
-        }catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id){
+    @PostMapping("/getbyid")
+    public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest){
         try{
-            StudentResponse existingStudent = studentImpl.findById(id);
-            if(existingStudent == null){
-                return ResponseEntity.notFound().build();
+            BaseApiResponse baseApiResponse = new BaseApiResponse("404", 0, "Student not found", Collections.emptyList());
+            if (searchRequest.getId() != null && searchRequest.getId() != 0){
+                baseApiResponse = studentImpl.findById(searchRequest.getId());
             }
-            studentImpl.deleteStudent(id);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Student Deleted Successfully!");
+            else if (searchRequest.getEmail() != null && !StringUtil.isNullOrEmpty(searchRequest.getEmail())) {
+                baseApiResponse = studentImpl.findByEmail(searchRequest.getEmail());
+            }
+            else if (!StringUtil.isNullOrEmpty(searchRequest.getName())){
+                baseApiResponse = studentImpl.findByStudentName(searchRequest.getName());
+            }
+
+            if (baseApiResponse.getSuccess() == 1) {
+                return ResponseEntity.ok(baseApiResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(baseApiResponse);
+            }
+        }
+        catch (RuntimeException e){
+            if (e.getMessage().equals("Student not Found")){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "Student not found", Collections.emptyList()));
+            }
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
+    @PostMapping("/create")
+    public ResponseEntity<BaseApiResponse> createOrUpdate(@RequestBody StudentRequest request) {
+        try {
+            BaseApiResponse baseApiResponse = studentImpl.createOrUpdateStudent(request);
+            if(baseApiResponse.getSuccess() == 1){
+                if (request.getId() == null || request.getId() == 0) {
+                    return ResponseEntity.status(HttpStatus.CREATED).body(baseApiResponse);
+                } else {
+                    return ResponseEntity.status(HttpStatus.ACCEPTED).body(baseApiResponse);
+                }
+            }
+            else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseApiResponse);
+            }
+        } catch (RuntimeException e) {
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<BaseApiResponse> createBatch(@RequestBody List<StudentRequest> requests){
+        try{
+            BaseApiResponse baseApiResponse = studentImpl.createMultiple(requests);
+            if(baseApiResponse.getSuccess() == 1){
+                return ResponseEntity.status(HttpStatus.CREATED).body(baseApiResponse);
+            }else{
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(baseApiResponse);
+            }
+        } catch (RuntimeException e) {
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<BaseApiResponse> delete(@RequestBody SearchRequest searchRequest){
+        try{
+            BaseApiResponse baseApiResponse = new BaseApiResponse("404", 1, "Student not found", Collections.emptyList());
+            if(searchRequest.getId() != null && searchRequest.getId() != 0){
+                baseApiResponse = studentImpl.deleteStudent(searchRequest.getId());
+            }
+            else if(!StringUtil.isNullOrEmpty(searchRequest.getEmail())){
+                baseApiResponse = studentImpl.deleteStudentByEmail(searchRequest.getEmail());
+            }
+
+            if(baseApiResponse.getSuccess() == 1){
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(baseApiResponse);
+            }else{
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "Student not found", Collections.emptyList()));
+            }
+
         }catch (RuntimeException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            if (e.getMessage().equals("Student not Found")){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "Student not found", Collections.emptyList()));
+            }
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }

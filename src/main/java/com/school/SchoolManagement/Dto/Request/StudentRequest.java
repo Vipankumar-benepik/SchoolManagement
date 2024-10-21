@@ -10,8 +10,9 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StudentRequest {
-    private String firstName;
-    private String lastName;
+    private Long id;
+
+    private String studentName;
     private Date dob;
     private Date enrollmentDate;
     private String gender;
@@ -20,7 +21,5 @@ public class StudentRequest {
     private Float gradeLevel;
     private Boolean status;
 
-    private String username;
     private String email;
-    private String password;
 }

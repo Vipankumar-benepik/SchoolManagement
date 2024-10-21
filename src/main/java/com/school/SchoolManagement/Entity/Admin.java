@@ -53,8 +53,4 @@ public class Admin {
 //    @Column(name = "email")
     private String email;
 
-//    @NotNull(message = "Password cannot be null")
-//    @Size(min = 6, message = "Password must be at least 6 characters long")
-//    @Column(name = "password")
-    private String password;
 }

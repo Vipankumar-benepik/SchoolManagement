@@ -11,16 +11,16 @@ import java.util.Date;
 @AllArgsConstructor
 public class StudentResponse {
     private Long id;
-    private String firstName;
-    private String lastName;
+
+    private String studentName;
     private Date dob;
     private Date enrollmentDate;
     private String gender;
     private String address;
     private String phone;
     private Float gradeLevel;
+    private Boolean status;
 
-    private String username;
     private String email;
 
 }

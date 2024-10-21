@@ -22,12 +22,17 @@ public class AdminController {
 
     @PostMapping("/get")
     public ResponseEntity<BaseApiResponse> getAll(){
-        BaseApiResponse admins = adminImpl.findAllAdmin();
-        if(admins.getSuccess() ==1){
-            return ResponseEntity.ok(admins);
-        }
-        else{
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(admins);
+        try{
+            BaseApiResponse admins = adminImpl.findAllAdmin();
+            if(admins.getSuccess() ==1){
+                return ResponseEntity.ok(admins);
+            }
+            else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(admins);
+            }
+        } catch (Exception e) {
+            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

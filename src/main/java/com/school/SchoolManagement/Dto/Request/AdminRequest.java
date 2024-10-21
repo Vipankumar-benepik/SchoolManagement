@@ -41,15 +41,6 @@ public class AdminRequest {
 //    @Column(name = "status")
     private Boolean status;
 
-
-//    @NotNull(message = "Email cannot be null")
-//    @Size(max = 50, message = "Address cannot exceed 255 characters")
-//    @Email(message = "Email must be a valid email address")
-//    @Column(name = "email")
     private String email;
 
-//    @NotNull(message = "Password cannot be null")
-//    @Size(min = 6, message = "Password must be at least 6 characters long")
-//    @Column(name = "password")
-    private String password;
 }
