@@ -19,6 +19,7 @@ public class User {
     private String email;
     private String password;
     private Boolean status;
+    @Enumerated(EnumType.STRING)
     private Role role;
     private Long refId;
 }

@@ -31,26 +31,37 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    // Generate token with user details
-    public String generateToken(String userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateToken(String username, String role) {
+        return buildToken(username, role);
     }
 
-    // Generate token with extra claims
-    public String generateToken(Map<String, Object> extraClaims, String userDetails) {
-        long jwtExpiration = 3600000;
-        return buildToken(extraClaims, userDetails, jwtExpiration);
-    }
+//    // Generate token with user details
+//    public String generateToken(String username, String role) {
+//        Map<String, Object> claims = new HashMap<>();
+////        claims.put("role", user.getRole().name());
+//        return generateToken(new HashMap<>(), username);
+//    }
+//
+//    // Generate token with extra claims
+//    public String generateToken(Map<String, Object> extraClaims, String username) {
+//        long jwtExpiration = 3600000;
+//        return buildToken(extraClaims, username, jwtExpiration);
+//    }
 
     // Build the JWT token with claims, subject, expiration, and signature
-    private String buildToken(Map<String, Object> extraClaims, String userDetails, long expiration) {
+    private String buildToken(String username, String role) {
+        long jwtExpiration = 3600000;
         return Jwts.builder()
-                .claims(extraClaims)
-                .subject(userDetails)
+                .claim("role",role)
+                .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey())
                 .compact();
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     // Validate the token by comparing username and checking expiration

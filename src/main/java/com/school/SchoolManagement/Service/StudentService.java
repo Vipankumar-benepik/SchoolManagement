@@ -8,6 +8,7 @@ import com.school.SchoolManagement.Implementation.StudentImpl;
 import com.school.SchoolManagement.Repository.StudentRepository;
 import com.school.SchoolManagement.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
 @Service
 public class StudentService implements StudentImpl {
 
@@ -33,10 +36,10 @@ public class StudentService implements StudentImpl {
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
 
-            return new BaseApiResponse("200", 1, "Fetch Successful", activeStudents);
+            return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_FETCHED, activeStudents);
 
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -44,16 +47,16 @@ public class StudentService implements StudentImpl {
         try{
             Student student = studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not Found"));
             if (student.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_FETCHED, student);
             }
             else {
-                return new BaseApiResponse("404", 1, "Student not Found", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
             }
         } catch (Exception e) {
             if(e.getMessage().equals("Student not Found")){
-                return new BaseApiResponse("404", 1, "Not Found ID", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
             }
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -61,12 +64,12 @@ public class StudentService implements StudentImpl {
         try{
             Student student = studentRepository.findByEmail(email);
             if (student != null && student.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_FETCHED, student);
             }
 
-            return new BaseApiResponse("404", 1, "Student not Found", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -77,9 +80,9 @@ public class StudentService implements StudentImpl {
                     .filter(student -> student.getStatus() != null && student.getStatus())
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
-            return new BaseApiResponse("200", 1, "Fetch Successful", studentsList);
+            return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_FETCHED, studentsList);
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
 
     }
@@ -90,20 +93,20 @@ public class StudentService implements StudentImpl {
 
             if (studentRequest.getId() == null || studentRequest.getId() == 0) {
                 studentRepository.save(student);
-                return new BaseApiResponse("201", 1, "Created", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_CREATED, student);
             } else {
                 Optional<Student> existingStudentOpt = studentRepository.findById(studentRequest.getId());
                 if (existingStudentOpt.isPresent()) {
                     Student existingStudent = existingStudentOpt.get();
                     updateEntity(existingStudent, studentRequest);
                     studentRepository.save(existingStudent);
-                    return new BaseApiResponse("202", 1, "Updated", existingStudent);
+                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_UPDATED, existingStudent);
                 } else {
-                    return new BaseApiResponse("404", 0, "Student not found", Collections.emptyList());
+                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
                 }
             }
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
 
     }
@@ -116,11 +119,11 @@ public class StudentService implements StudentImpl {
                 students.add(student1);
             }
             else{
-                return new BaseApiResponse("406", 0, "Id's Not Acceptable", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
             }
         }
         studentRepository.saveAll(students);
-        return new BaseApiResponse("201", 1, "All Created Successfully", students);
+        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_CREATED, students);
     }
 
     public BaseApiResponse deleteStudent(Long id) {
@@ -129,15 +132,15 @@ public class StudentService implements StudentImpl {
             if(student.getStatus()){
                 student.setStatus(false);
                 studentRepository.save(student);
-                return new BaseApiResponse("202", 1, "Deleted Successfully", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_DELETED, student);
             }
             else{
-                return new BaseApiResponse("404", 0, "Student not Found", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, student);
             }
 
         }
         catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -147,15 +150,15 @@ public class StudentService implements StudentImpl {
             if(student.getStatus()){
                 student.setStatus(false);
                 studentRepository.save(student);
-                return new BaseApiResponse("202", 0, "Deleted Successfully", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_DELETED, student);
             }
             else{
-                return new BaseApiResponse("404", 0, "Student not Found", student);
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, student);
             }
 
         }
         catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 

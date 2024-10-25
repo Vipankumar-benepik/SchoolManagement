@@ -3,6 +3,7 @@ package com.school.SchoolManagement.Config;
 
 import com.school.SchoolManagement.JWT.AuthTokenFilter;
 import com.school.SchoolManagement.Service.AuthService.UserPrinciple;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -28,6 +30,9 @@ public class ServiceConfig {
 
     @Autowired
     private AuthTokenFilter authTokenFilter;
+
+    @Autowired
+    private AuthEntryPointConfig authEntryPointConfig;
 
     @Bean
     public UserDetailsService userDetailsService(){
@@ -48,6 +53,13 @@ public class ServiceConfig {
     }
 
     @Bean
+    public AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, authException) -> {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+        };
+    }
+
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
@@ -57,14 +69,17 @@ public class ServiceConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll() // Allow login for everyone
-                        .requestMatchers("/api/auth/register").hasRole("ADMIN") // Only ADMIN can access registration
-//                        .requestMatchers("/api/student/**").hasAnyRole("ADMIN", "STUDENT")
-//                        .requestMatchers("/api/teacher/**").hasAnyRole("ADMIN", "TEACHER")
-//                        .requestMatchers("/api/parent/**").hasAnyRole("ADMIN", "PARENT")
-                        .anyRequest().authenticated() // Protect all other endpoints
+                        .requestMatchers("/api/auth/login","/api/user/register", "/swagger","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
+                                .requestMatchers("/api/schoolmanagement/**").hasAnyRole("ADMIN","STUDENT")
+//                                .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN","STUDENT")
+//                                .requestMatchers("/api/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(sess -> sess
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.authenticationEntryPoint(authEntryPointConfig))
+//                .exceptionHandling(exceptionHandling ->
+//                        exceptionHandling.authenticationEntryPoint(unauthorizedEntryPoint()))
+                .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions
                 )
                 .authenticationProvider(authenticationProvider()) // Custom authentication provider

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
+
 @Service
 public class AdminService implements AdminImpl {
 
@@ -37,10 +39,10 @@ public class AdminService implements AdminImpl {
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
 
-            return new BaseApiResponse("200", 1, "Fetch Successful", activeAdmins);
+            return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, activeAdmins);
 
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -48,16 +50,16 @@ public class AdminService implements AdminImpl {
         try{
             Admin admin = adminRepository.findById(id).orElseThrow(() -> new RuntimeException("Admin not Found"));
             if (admin.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, admin);
             }
             else {
-                return new BaseApiResponse("404", 1, "Admin not Found", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             }
         } catch (Exception e) {
             if(e.getMessage().equals("Admin not Found")){
-                return new BaseApiResponse("404", 1, "Not Found ID", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
             }
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -65,12 +67,12 @@ public class AdminService implements AdminImpl {
         try{
             Admin admin = adminRepository.findByEmail(email);
             if (admin != null && admin.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, admin);
             }
 
-            return new BaseApiResponse("404", 1, "Admin not Found", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -81,9 +83,9 @@ public class AdminService implements AdminImpl {
                     .filter(admin -> admin.getStatus() != null && admin.getStatus())
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
-            return new BaseApiResponse("200", 1, "Fetch Successful", adminList);
+            return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, adminList);
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
 
     }
@@ -94,22 +96,21 @@ public class AdminService implements AdminImpl {
 
             if (adminRequest.getId() == null || adminRequest.getId() == 0) {
                 adminRepository.save(admin);
-                return new BaseApiResponse("201", 1, "Created", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_CREATED, admin);
             } else {
                 Optional<Admin> existingAdminOpt = adminRepository.findById(adminRequest.getId());
                 if (existingAdminOpt.isPresent()) {
                     Admin existingAdmin = existingAdminOpt.get();
                     updateEntity(existingAdmin, adminRequest);
                     adminRepository.save(existingAdmin);
-                    return new BaseApiResponse("202", 1, "Updated", existingAdmin);
+                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_UPDATED, existingAdmin);
                 } else {
-                    return new BaseApiResponse("404", 0, "Admin not found", Collections.emptyList());
+                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
                 }
             }
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
-
     }
 
     public BaseApiResponse createMultiple(List<AdminRequest> adminRequests){
@@ -120,11 +121,11 @@ public class AdminService implements AdminImpl {
                 admin.add(admin1);
             }
             else{
-                return new BaseApiResponse("406", 0, "Id's Not Acceptable", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
             }
         }
         adminRepository.saveAll(admin);
-        return new BaseApiResponse("201", 1, "All Created Successfully", admin);
+        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_CREATED, admin);
     }
 
     public BaseApiResponse deleteAdmin(Long id) {
@@ -133,15 +134,15 @@ public class AdminService implements AdminImpl {
             if(admin.getStatus()){
                 admin.setStatus(false);
                 adminRepository.save(admin);
-                return new BaseApiResponse("202", 1, "Deleted Successfully", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_DELETED, admin);
             }
             else{
-                return new BaseApiResponse("404", 0, "Admin not Found", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, admin);
             }
 
         }
         catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
@@ -151,15 +152,14 @@ public class AdminService implements AdminImpl {
             if(admin.getStatus()){
                 admin.setStatus(false);
                 adminRepository.save(admin);
-                return new BaseApiResponse("202", 0, "Deleted Successfully", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_DELETED, admin);
             }
             else{
-                return new BaseApiResponse("404", 0, "Admin not Found", admin);
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, admin);
             }
-
         }
         catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 

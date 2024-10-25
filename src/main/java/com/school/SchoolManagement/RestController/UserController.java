@@ -5,9 +5,12 @@ import com.school.SchoolManagement.Dto.Request.SearchRequest;
 import com.school.SchoolManagement.Dto.Request.UserRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.UserImpl;
+import com.school.SchoolManagement.Utils.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,100 +19,108 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Collections;
 import java.util.List;
 
+import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
+
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(BASE_URL)
+@PreAuthorize("hasRole('ADMIN')")
 public class UserController {
+
     @Autowired
     private UserImpl userImpl;
 
-    @PostMapping("/get")
-    public ResponseEntity<BaseApiResponse> getAll(){
-        try{
+    @Autowired
+    private CommonUtils commonUtils;
+
+    @PostMapping(DEFINE_API.USER_FETCH_API)
+    public ResponseEntity<BaseApiResponse> getAll() {
+        try {
             BaseApiResponse baseApiResponse = userImpl.findAllUser();
-            if(baseApiResponse.getSuccess() ==1){
-                return ResponseEntity.ok(baseApiResponse);
-            }
-            else{
+            if (baseApiResponse.getSuccess() == 1) {
+                return ResponseEntity.status(HttpStatus.OK).body(baseApiResponse);
+            } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseApiResponse);
             }
         } catch (Exception e) {
-            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            BaseApiResponse errorResponse = new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
-    @PostMapping("/getbyid")
-    public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest){
-        try{
-            BaseApiResponse baseApiResponse = new BaseApiResponse("404", 0, "User not found", Collections.emptyList());
-            if (searchRequest.getId() != null && searchRequest.getId() != 0){
-                baseApiResponse = userImpl.findById(searchRequest.getId());
+    @PostMapping(DEFINE_API.USER_FETCH_BY_ID_API)
+    public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest) {
+        try {
+            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) || !commonUtils.isValidEmail(searchRequest.getEmail()) || searchRequest.getId() == null) {
+                BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.FIELD_REQUIRED_MESSAGE, Collections.emptyList());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseApiResponse);
             }
-            else if (searchRequest.getEmail() != null && !StringUtil.isNullOrEmpty(searchRequest.getEmail())) {
+
+            BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
+
+            if (searchRequest.getId() != null && searchRequest.getId() != 0) {
+                baseApiResponse = userImpl.findById(searchRequest.getId());
+            } else if (searchRequest.getEmail() != null && !StringUtil.isNullOrEmpty(searchRequest.getEmail())) {
                 baseApiResponse = userImpl.findByEmail(searchRequest.getEmail());
             }
-//            else if (!StringUtil.isNullOrEmpty(searchRequest.getName())){
-//                baseApiResponse = userImpl.findByUserName(searchRequest.getName());
-//            }
 
             if (baseApiResponse.getSuccess() == 1) {
-                return ResponseEntity.ok(baseApiResponse);
+                return ResponseEntity.status(HttpStatus.OK).body(baseApiResponse);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(baseApiResponse);
             }
-        }
-        catch (RuntimeException e){
-            if (e.getMessage().equals("User not Found")){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "User not found", Collections.emptyList()));
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not Found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList()));
             }
-            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            BaseApiResponse errorResponse = new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
 
-    @PostMapping("/register")
+    @PostMapping(DEFINE_API.USER_REGISTER_API)
     public ResponseEntity<BaseApiResponse> createOrUpdate(@RequestBody UserRequest request) {
         try {
+            if (StringUtil.isNullOrEmpty(request.getEmail())  || !commonUtils.isValidEmail(request.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.INVALID_REQUEST, Collections.emptyList()));
+            }
             BaseApiResponse baseApiResponse = userImpl.createOrUpdateUser(request);
-            if(baseApiResponse.getSuccess() == 1){
+            if (baseApiResponse.getSuccess() == 1) {
                 if (request.getId() == null || request.getId() == 0) {
                     return ResponseEntity.status(HttpStatus.CREATED).body(baseApiResponse);
                 } else {
                     return ResponseEntity.status(HttpStatus.ACCEPTED).body(baseApiResponse);
                 }
-            }
-            else{
+            } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(baseApiResponse);
             }
         } catch (RuntimeException e) {
-            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            BaseApiResponse errorResponse = new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
-    @PostMapping("/delete")
-    public ResponseEntity<BaseApiResponse> delete(@RequestBody SearchRequest searchRequest){
-        try{
-            BaseApiResponse baseApiResponse = new BaseApiResponse("404", 1, "User not found", Collections.emptyList());
-            if(searchRequest.getId() != null && searchRequest.getId() != 0){
+    @PostMapping(DEFINE_API.USER_DELETE_API)
+    public ResponseEntity<BaseApiResponse> delete(@RequestBody SearchRequest searchRequest) {
+        try {
+            BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
+            if (searchRequest.getId() != null && searchRequest.getId() != 0) {
                 baseApiResponse = userImpl.deleteUser(searchRequest.getId());
-            }
-            else if(!StringUtil.isNullOrEmpty(searchRequest.getEmail())){
+            } else if (!StringUtil.isNullOrEmpty(searchRequest.getEmail()) && commonUtils.isValidEmail(searchRequest.getEmail())) {
                 baseApiResponse = userImpl.deleteUserByEmail(searchRequest.getEmail());
             }
 
-            if(baseApiResponse.getSuccess() == 1){
+            if (baseApiResponse.getSuccess() == 1) {
                 return ResponseEntity.status(HttpStatus.ACCEPTED).body(baseApiResponse);
-            }else{
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "User not found", Collections.emptyList()));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList()));
             }
 
-        }catch (RuntimeException e){
-            if (e.getMessage().equals("User not Found")){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse("404", 1, "User not found", Collections.emptyList()));
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("User not Found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList()));
             }
-            BaseApiResponse errorResponse = new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            BaseApiResponse errorResponse = new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

@@ -12,12 +12,15 @@ import com.school.SchoolManagement.Repository.AdminRepository;
 import com.school.SchoolManagement.Repository.StudentRepository;
 import com.school.SchoolManagement.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
 
 @Service
 public class UserService implements UserImpl {
@@ -27,6 +30,8 @@ public class UserService implements UserImpl {
     private StudentRepository studentRepository;
     @Autowired
     private AdminRepository adminRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     public BaseApiResponse findAllUser() {
         try {
@@ -37,89 +42,82 @@ public class UserService implements UserImpl {
                     .map(this::mapToResponse)
                     .collect(Collectors.toList());
 
-            return new BaseApiResponse("200", 1, "Fetch Successful", activeUsers);
+            return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_FETCHED, activeUsers);
 
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
     public BaseApiResponse findById(Long id) {
-        try{
+        try {
             User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not Found"));
             if (user.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful ID", user);
-            }
-            else {
-                return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_FETCHED, user);
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
             }
         } catch (Exception e) {
-            if(e.getMessage().equals("User not Found")){
-                return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
+            if (e.getMessage().equals("User not Found")) {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
             }
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
     public BaseApiResponse findByEmail(String email) {
-        try{
+        try {
             User user = userRepository.findByEmail(email);
             if (user != null && user.getStatus()) {
-                return new BaseApiResponse("200", 1, "Fetch Successful", user);
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_FETCHED, user);
             }
 
-            return new BaseApiResponse("404", 1, "User not Found", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
         } catch (Exception e) {
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
-//    public BaseApiResponse findByUserName(String username) {
-//        try{
-//            List<User> users = userRepository.findByUserName(username);
-//
-//            List<UserResponse> userList = users.stream()
-//                    .filter(user -> user.getStatus() != null && user.getStatus())
-//                    .map(this::mapToResponse)
-//                    .collect(Collectors.toList());
-//            return new BaseApiResponse("200", 1, "Fetch Successful", userList);
-//        } catch (Exception e) {
-//            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
-//        }
-//    }
-
     public BaseApiResponse createOrUpdateUser(UserRequest userRequest) {
-        try{
+        try {
             User user = mapToEntity(userRequest);
 
             if (userRequest.getId() == null || userRequest.getId() == 0) {
-                if(userRequest.getRole().equals(Role.ADMIN)){
+                if (userRequest.getRole().equals(Role.ADMIN)) {
                     Admin existingAdmin = adminRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Admin not Found"));
-                    if(existingAdmin != null && existingAdmin.getEmail().equals(userRequest.getEmail())){
+                    if (existingAdmin != null && existingAdmin.getEmail().equals(userRequest.getEmail())) {
                         user.setEmail(existingAdmin.getEmail());
+                        user.setRole(userRequest.getRole());
+                        System.out.println("UserRequest role: " + userRequest.getRole());
+                        System.out.println("User Entity role: " + user.getRole());
+                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                        System.out.println("This is user Password " + user.getPassword());
+                        System.out.println("This is password " + passwordEncoder.encode(user.getPassword()));
                         userRepository.save(user);
-                        return new BaseApiResponse("201", 1, "Created", user);
-                    }
-                    else{
-                        if(!existingAdmin.getEmail().equals(userRequest.getEmail())){
-                            return new BaseApiResponse("404", 0, "Admin Email "+ userRequest.getEmail() +" not available", Collections.emptyList());
+                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
+                    } else {
+                        if (!existingAdmin.getEmail().equals(userRequest.getEmail())) {
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_EMAIL_NOT_FOUND, Collections.emptyList());
                         }
-                        return new BaseApiResponse("404", 0, "Admin Id "+ userRequest.getId() +" not available", user);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_ID_NOT_FOUND, user);
                     }
-                }
-
-                else if(userRequest.getRole().equals(Role.STUDENT)){
+                } else if (userRequest.getRole().equals(Role.STUDENT)) {
                     Student existingStudent = studentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Student not Found"));
-                    if(existingStudent != null && existingStudent.getEmail().equals(userRequest.getEmail())){
+                    if (existingStudent != null && existingStudent.getEmail().equals(userRequest.getEmail())) {
                         user.setEmail(existingStudent.getEmail());
+                        user.setRole(userRequest.getRole());
+                        System.out.println("UserRequest role: " + userRequest.getRole());
+                        System.out.println("User Entity role: " + user.getRole());
+                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                        System.out.println("This is user Password " + user.getPassword());
+                        System.out.println("This is password " + passwordEncoder.encode(user.getPassword()));
                         userRepository.save(user);
-                        return new BaseApiResponse("201", 1, "Created", user);
-                    }
-                    else{
-                        if(!existingStudent.getEmail().equals(userRequest.getEmail())){
-                            return new BaseApiResponse("404", 0, "Student Email "+ userRequest.getEmail() +" not available", Collections.emptyList());
+                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
+                    } else {
+                        if (!existingStudent.getEmail().equals(userRequest.getEmail())) {
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_EMAIL_NOT_FOUND, Collections.emptyList());
                         }
-                        return new BaseApiResponse("404", 0, "Student Id "+ userRequest.getId() +" not available", user);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_ID_NOT_FOUND, user);
                     }
                 }
 
@@ -129,57 +127,53 @@ public class UserService implements UserImpl {
                     User existingUser = existingUserOpt.get();
                     updateEntity(existingUser, userRequest);
                     userRepository.save(existingUser);
-                    return new BaseApiResponse("202", 1, "Updated", existingUser);
+                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_UPDATED, existingUser);
                 } else {
-                    return new BaseApiResponse("404", 0, "User not found", Collections.emptyList());
+                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
                 }
             }
 
-            return new BaseApiResponse("406", 0, "Not Acceptable", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.NOT_ACCEPTABLE, Collections.emptyList());
 
         } catch (Exception e) {
-            if(e.getMessage().equals("Student not Found")){
-                return new BaseApiResponse("404", 1, "Student not Found", Collections.emptyList());
-            }else if(e.getMessage().equals("Admin not Found")){
-                return new BaseApiResponse("404", 1, "Admin not Found", Collections.emptyList());
+            if (e.getMessage().equals("Student not Found")) {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_NOT_FOUND, Collections.emptyList());
+            } else if (e.getMessage().equals("Admin not Found")) {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_NOT_FOUND, Collections.emptyList());
             }
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
     public BaseApiResponse deleteUser(Long id) {
-        try{
+        try {
             User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not Found"));
-            if(user.getStatus()){
+            if (user.getStatus()) {
                 user.setStatus(false);
                 userRepository.save(user);
-                return new BaseApiResponse("202", 1, "Deleted Successfully", user);
-            }
-            else{
-                return new BaseApiResponse("404", 0, "User not Found", user);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_DELETED, user);
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, user);
             }
 
-        }
-        catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+        } catch (Exception e) {
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
     public BaseApiResponse deleteUserByEmail(String email) {
-        try{
+        try {
             User user = userRepository.findByEmail(email);
-            if(user.getStatus()){
+            if (user.getStatus()) {
                 user.setStatus(false);
                 userRepository.save(user);
-                return new BaseApiResponse("202", 0, "Deleted Successfully", user);
-            }
-            else{
-                return new BaseApiResponse("404", 0, "User not Found", user);
+                return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_DELETED, user);
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, user);
             }
 
-        }
-        catch (Exception e){
-            return new BaseApiResponse("500", 0, "Something went wrong", Collections.emptyList());
+        } catch (Exception e) {
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
 
