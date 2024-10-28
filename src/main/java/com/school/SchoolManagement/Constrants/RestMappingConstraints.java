@@ -55,6 +55,13 @@ public interface RestMappingConstraints {
         String STREAM_BATCH_API = "/stream/batch";
         String STREAM_DELETE_API = "/stream/delete";
 
+        String SUBJECT_PROFILE_API = "/subject";
+        String SUBJECT_FETCH_API = "/subject/fetch";
+        String SUBJECT_FETCH_BY_ID_API = "/subject/fetchbyid";
+        String SUBJECT_CREATE_API = "/subject/create";
+        String SUBJECT_BATCH_API = "/subject/batch";
+        String SUBJECT_DELETE_API = "/subject/delete";
+
         String LIBRARIAN_PROFILE_API = "/librarian";
         String LIBRARIAN_FETCH_API = "/librarian/fetch";
         String LIBRARIAN_FETCH_BY_ID_API = "/librarian/fetchbyid";
@@ -123,6 +130,7 @@ public interface RestMappingConstraints {
         String LIBRARIAN_REF_ID_NOT_FOUND = "Librarian Id not Found.";
 
         // Common API Messages
+
         // BOOK API MESSAGE_NAMES
         String BOOK_CREATED = "Book successfully created.";
         String BOOK_FETCHED = "Book successfully fetched.";
@@ -134,6 +142,12 @@ public interface RestMappingConstraints {
         String STREAM_FETCHED = "Stream successfully fetched.";
         String STREAM_UPDATED = "Stream information updated.";
         String STREAM_DELETED = "Stream successfully deleted.";
+
+        // SUBJECT API MESSAGE_NAMES
+        String SUBJECT_CREATED = "Subject successfully created.";
+        String SUBJECT_FETCHED = "Subject successfully fetched.";
+        String SUBJECT_UPDATED = "Subject information updated.";
+        String SUBJECT_DELETED = "Subject successfully deleted.";
 
         // COMMON STATUS_MESSAGES
         String OPERATION_SUCCESS = "Operation completed successfully.";
