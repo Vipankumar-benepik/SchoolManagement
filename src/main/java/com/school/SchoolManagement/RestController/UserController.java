@@ -1,7 +1,7 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
-import com.school.SchoolManagement.Dto.Request.SearchRequest;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.SearchRequest;
 import com.school.SchoolManagement.Dto.Request.UserRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.UserImpl;
@@ -10,14 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
-import java.util.List;
 
 import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
 

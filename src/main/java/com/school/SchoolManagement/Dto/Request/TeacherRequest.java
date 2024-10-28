@@ -21,7 +21,7 @@ public class TeacherRequest {
     private String specialization;
     private Boolean status;
 
-    private Long departmentId;
+    private Long steamId;
     private Long courseId;
 
 

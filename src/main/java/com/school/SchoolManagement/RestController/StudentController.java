@@ -1,7 +1,7 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
-import com.school.SchoolManagement.Dto.Request.SearchRequest;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.SearchRequest;
 import com.school.SchoolManagement.Dto.Request.StudentRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.StudentImpl;

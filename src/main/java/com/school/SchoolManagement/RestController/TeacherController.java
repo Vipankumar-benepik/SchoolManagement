@@ -1,12 +1,11 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
-import com.school.SchoolManagement.Dto.Request.SearchRequest;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.SearchRequest;
 import com.school.SchoolManagement.Dto.Request.TeacherRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.TeacherImpl;
 import com.school.SchoolManagement.Utils.CommonUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

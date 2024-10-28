@@ -37,7 +37,6 @@ public interface RestMappingConstraints {
         String PARENT_PROFILE_API = "/parent";
         String PARENT_FETCH_API = "/parent/fetch";
         String PARENT_FETCH_BY_ID_API = "/parent/fetchbyid";
-        String PARENT_FETCH_BY_STUDENT_ID_API = "/parent/fetchbyid";
         String PARENT_CREATE_API = "/parent/create";
         String PARENT_BATCH_API = "/parent/batch";
         String PARENT_DELETE_API = "/parent/delete";
@@ -45,15 +44,20 @@ public interface RestMappingConstraints {
         String BOOK_PROFILE_API = "/book";
         String BOOK_FETCH_API = "/book/fetch";
         String BOOK_FETCH_BY_ID_API = "/book/fetchbyid";
-        String BOOK_FETCH_BY_STUDENT_ID_API = "/book/fetchbyid";
         String BOOK_CREATE_API = "/book/create";
         String BOOK_BATCH_API = "/book/batch";
         String BOOK_DELETE_API = "/book/delete";
 
+        String STREAM_PROFILE_API = "/stream";
+        String STREAM_FETCH_API = "/stream/fetch";
+        String STREAM_FETCH_BY_ID_API = "/stream/fetchbyid";
+        String STREAM_CREATE_API = "/stream/create";
+        String STREAM_BATCH_API = "/stream/batch";
+        String STREAM_DELETE_API = "/stream/delete";
+
         String LIBRARIAN_PROFILE_API = "/librarian";
         String LIBRARIAN_FETCH_API = "/librarian/fetch";
         String LIBRARIAN_FETCH_BY_ID_API = "/librarian/fetchbyid";
-        String LIBRARIAN_FETCH_BY_STUDENT_ID_API = "/librarian/fetchbyid";
         String LIBRARIAN_CREATE_API = "/librarian/create";
         String LIBRARIAN_BATCH_API = "/librarian/batch";
         String LIBRARIAN_DELETE_API = "/librarian/delete";
@@ -118,11 +122,18 @@ public interface RestMappingConstraints {
         String LIBRARIAN_REF_EMAIL_NOT_FOUND = "Librarian Email not Found.";
         String LIBRARIAN_REF_ID_NOT_FOUND = "Librarian Id not Found.";
 
+        // Common API Messages
         // BOOK API MESSAGE_NAMES
         String BOOK_CREATED = "Book successfully created.";
         String BOOK_FETCHED = "Book successfully fetched.";
         String BOOK_UPDATED = "Book information updated.";
         String BOOK_DELETED = "Book successfully deleted.";
+
+        // STREAM API MESSAGE_NAMES
+        String STREAM_CREATED = "Stream successfully created.";
+        String STREAM_FETCHED = "Stream successfully fetched.";
+        String STREAM_UPDATED = "Stream information updated.";
+        String STREAM_DELETED = "Stream successfully deleted.";
 
         // COMMON STATUS_MESSAGES
         String OPERATION_SUCCESS = "Operation completed successfully.";

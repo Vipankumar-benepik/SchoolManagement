@@ -8,30 +8,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class Teacher {
+public class Stream {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String teacherName;
-    private Date dob;
-    private String gender;
-    private String address;
-    private String phone;
-    private String salary;
-    private String specialization;
-    private Date hireDate;
+    private String streamName;
     private Boolean status;
 
-    private Long streamId;
-    private Long courseId;
-
-
-    private String email;
+    // Stream Head is Teacher ID
+    private Long streamHeadId;
 }

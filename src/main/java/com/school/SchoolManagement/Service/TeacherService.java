@@ -162,7 +162,7 @@ public class TeacherService implements TeacherImpl {
                 teacher.getSalary(),
                 teacher.getSpecialization(),
                 teacher.getHireDate(),
-                teacher.getDepartmentId(),
+                teacher.getStreamId(),
                 teacher.getCourseId(),
                 teacher.getEmail()
         );
@@ -180,7 +180,7 @@ public class TeacherService implements TeacherImpl {
                 request.getSpecialization(),
                 new Date(),
                 true,
-                request.getDepartmentId(),
+                request.getSteamId(),
                 request.getCourseId(),
                 request.getEmail()
         );

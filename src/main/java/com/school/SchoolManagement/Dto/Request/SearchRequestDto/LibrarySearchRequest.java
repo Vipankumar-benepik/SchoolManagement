@@ -1,4 +1,4 @@
-package com.school.SchoolManagement.Dto.Request;
+package com.school.SchoolManagement.Dto.Request.SearchRequestDto;
 
 import lombok.Data;
 

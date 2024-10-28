@@ -21,7 +21,7 @@ public class TeacherResponse {
     private String specialization;
     private Date hireDate;
 
-    private Long departmentId;
+    private Long streamId;
     private Long courseId;
 
 

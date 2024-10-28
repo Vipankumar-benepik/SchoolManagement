@@ -1,12 +1,10 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.SchoolManagement.Dto.Request.AdminRequest;
 import com.school.SchoolManagement.Dto.Request.Checksum;
-import com.school.SchoolManagement.Dto.Request.SearchRequest;
-import com.school.SchoolManagement.Dto.Response.AdminResponse;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.SearchRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Encryption.Encryption;
 import com.school.SchoolManagement.Implementation.AdminImpl;
@@ -16,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;

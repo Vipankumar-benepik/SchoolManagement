@@ -1,10 +1,9 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
-import com.school.SchoolManagement.Constrants.RestMappingConstraints;
 import com.school.SchoolManagement.Dto.Request.BookRequest;
-import com.school.SchoolManagement.Dto.Request.LibrarySearchRequest;
-import com.school.SchoolManagement.Dto.Request.SearchRequest;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.LibrarySearchRequest;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.SearchRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Implementation.LibraryImpl;
 import org.springframework.beans.factory.annotation.Autowired;
