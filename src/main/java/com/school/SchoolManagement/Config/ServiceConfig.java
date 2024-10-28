@@ -35,7 +35,7 @@ public class ServiceConfig {
     private AuthEntryPointConfig authEntryPointConfig;
 
     @Bean
-    public UserDetailsService userDetailsService(){
+    public UserDetailsService userDetailsService() {
         return new UserPrinciple();
     }
 
@@ -69,11 +69,11 @@ public class ServiceConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login","/api/user/register", "/swagger","/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
-                                .requestMatchers("/api/schoolmanagement/**").hasAnyRole("ADMIN","STUDENT")
+                                .requestMatchers("/api/auth/login", "/api/user/register", "/swagger", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
+                                .requestMatchers("/api/schoolmanagement/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER", "PARENT")
 //                                .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN","STUDENT")
 //                                .requestMatchers("/api/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                                .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(authEntryPointConfig))

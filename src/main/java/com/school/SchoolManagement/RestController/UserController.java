@@ -50,7 +50,7 @@ public class UserController {
     @PostMapping(DEFINE_API.USER_FETCH_BY_ID_API)
     public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest) {
         try {
-            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) || !commonUtils.isValidEmail(searchRequest.getEmail()) || searchRequest.getId() == null) {
+            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) && searchRequest.getId() == null) {
                 BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.FIELD_REQUIRED_MESSAGE, Collections.emptyList());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseApiResponse);
             }

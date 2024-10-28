@@ -55,7 +55,7 @@ public class AdminController {
     public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest) {
         try {
 
-            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) || StringUtil.isNullOrEmpty(searchRequest.getName()) || searchRequest.getId() == null || !commonUtils.isValidEmail(searchRequest.getEmail())) {
+            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) && StringUtil.isNullOrEmpty(searchRequest.getName()) && searchRequest.getId() == null ) {
                 BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.FIELD_REQUIRED_MESSAGE, Collections.emptyList());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseApiResponse);
             }

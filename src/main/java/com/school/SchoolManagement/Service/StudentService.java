@@ -6,7 +6,6 @@ import com.school.SchoolManagement.Dto.Response.StudentResponse;
 import com.school.SchoolManagement.Entity.Student;
 import com.school.SchoolManagement.Implementation.StudentImpl;
 import com.school.SchoolManagement.Repository.StudentRepository;
-import com.school.SchoolManagement.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -17,15 +16,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
+
 @Service
 public class StudentService implements StudentImpl {
 
     @Autowired
     private StudentRepository studentRepository;
-    @Autowired
-    private UserRepository userRepository;
 
     public BaseApiResponse findAllStudent() {
         try {
@@ -108,22 +105,25 @@ public class StudentService implements StudentImpl {
         } catch (Exception e) {
             return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
-
     }
 
     public BaseApiResponse createMultiple(List<StudentRequest> studentRequests){
-        List<Student> students = new ArrayList<>();
-        for (StudentRequest request: studentRequests){
-            if (request.getId() == null || request.getId() == 0){
-                Student student1 = mapToEntity(request);
-                students.add(student1);
+        try{
+            List<Student> students = new ArrayList<>();
+            for (StudentRequest request: studentRequests){
+                if (request.getId() == null || request.getId() == 0){
+                    Student student1 = mapToEntity(request);
+                    students.add(student1);
+                }
+                else{
+                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
+                }
             }
-            else{
-                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
-            }
+            studentRepository.saveAll(students);
+            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_CREATED, students);
+        }catch (Exception e){
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
-        studentRepository.saveAll(students);
-        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_CREATED, students);
     }
 
     public BaseApiResponse deleteStudent(Long id) {
