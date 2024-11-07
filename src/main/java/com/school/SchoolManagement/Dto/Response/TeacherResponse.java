@@ -22,8 +22,6 @@ public class TeacherResponse {
     private Date hireDate;
 
     private Long streamId;
-    private Long courseId;
-
 
     private String email;
 }

@@ -32,7 +32,7 @@ public class ParentController {
 
 
     @PostMapping(DEFINE_API.PARENT_FETCH_API)
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','PARENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER' ,'PARENT')")
     public ResponseEntity<BaseApiResponse> getAll() {
         try {
             BaseApiResponse parents = parentImpl.findAllParent();
@@ -51,7 +51,7 @@ public class ParentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseApiResponse> getById(@RequestBody SearchRequest searchRequest) {
         try {
-            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) && StringUtil.isNullOrEmpty(searchRequest.getName()) && searchRequest.getId() == null ) {
+            if (StringUtil.isNullOrEmpty(searchRequest.getEmail()) && StringUtil.isNullOrEmpty(searchRequest.getName()) && searchRequest.getId() == null) {
                 BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.FIELD_REQUIRED_MESSAGE, Collections.emptyList());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(baseApiResponse);
             }
@@ -63,6 +63,10 @@ public class ParentController {
                 baseApiResponse = parentImpl.findByEmail(searchRequest.getEmail());
             } else if (!StringUtil.isNullOrEmpty(searchRequest.getName())) {
                 baseApiResponse = parentImpl.findByParentName(searchRequest.getName());
+            } else if (searchRequest.getParentId()>0 && searchRequest.getId() != null){
+                baseApiResponse = parentImpl.findByStudentsParentId(searchRequest.getParentId());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList()));
             }
 
             if (baseApiResponse.getSuccess() == 1) {

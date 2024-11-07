@@ -4,8 +4,10 @@ import com.school.SchoolManagement.Dto.Request.ParentRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Dto.Response.ParentResponse;
 import com.school.SchoolManagement.Entity.Parent;
+import com.school.SchoolManagement.Entity.Student;
 import com.school.SchoolManagement.Implementation.ParentImpl;
 import com.school.SchoolManagement.Repository.ParentRepository;
+import com.school.SchoolManagement.Repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,9 @@ import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
 public class ParentService implements ParentImpl {
     @Autowired
     private ParentRepository parentRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
 
     @Override
     public BaseApiResponse findAllParent() {
@@ -46,6 +51,23 @@ public class ParentService implements ParentImpl {
             }
         } catch (Exception e) {
             if (e.getMessage().equals("Parent not Found")) {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+            }
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
+        }
+    }
+
+    @Override
+    public BaseApiResponse findByStudentsParentId(Long id){
+        try{
+            List<Student> student = studentRepository.findByParentId(id);
+            if(!student.isEmpty()){
+                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_FETCHED, student);
+            }else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.STUDENT_NOT_FOUND, Collections.emptyList());
+            }
+        } catch (Exception e) {
+            if (e.getMessage().equals("Student not Found")) {
                 return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
             }
             return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
@@ -86,22 +108,27 @@ public class ParentService implements ParentImpl {
     @Override
     public BaseApiResponse createOrUpdateParent(ParentRequest parentRequest) {
         try {
-            Parent parent = mapToEntity(parentRequest);
+            if (parentRequest.getId() == null || parentRequest.getId() >= 0){
+                Parent parent = mapToEntity(parentRequest);
 
-            if (parentRequest.getId() == null || parentRequest.getId() == 0) {
-                parentRepository.save(parent);
-                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_CREATED, parent);
-            } else {
-                Optional<Parent> existingParentOpt = parentRepository.findById(parent.getId());
-                if (existingParentOpt.isPresent()) {
-                    Parent existingParent = existingParentOpt.get();
-                    updateEntity(existingParent, parentRequest);
-                    parentRepository.save(existingParent);
-                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_UPDATED, existingParent);
+                if (parentRequest.getId() == null || parentRequest.getId() == 0) {
+                    parentRepository.save(parent);
+                    return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_CREATED, parent);
                 } else {
-                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    Optional<Parent> existingParentOpt = parentRepository.findById(parent.getId());
+                    if (existingParentOpt.isPresent()) {
+                        Parent existingParent = existingParentOpt.get();
+                        updateEntity(existingParent, parentRequest);
+                        parentRepository.save(existingParent);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_UPDATED, existingParent);
+                    } else {
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    }
                 }
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
             }
+
         } catch (Exception e) {
             return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
@@ -168,7 +195,6 @@ public class ParentService implements ParentImpl {
         parent.setRelation(request.getRelation());
         parent.setAddress(request.getAddress());
         parent.setPhone(request.getPhone());
-        parent.setStudentId(request.getStudentId());
 //        parent.setPassword(request.getPassword());
     }
 
@@ -181,7 +207,6 @@ public class ParentService implements ParentImpl {
                 parent.getRelation(),
                 parent.getAddress(),
                 parent.getPhone(),
-                parent.getStudentId(),
                 parent.getEmail()
         );
     }
@@ -196,7 +221,6 @@ public class ParentService implements ParentImpl {
                 request.getAddress(),
                 request.getPhone(),
                 true,
-                request.getStudentId(),
                 request.getEmail()
         );
     }

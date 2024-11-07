@@ -3,8 +3,10 @@ package com.school.SchoolManagement.Service;
 import com.school.SchoolManagement.Dto.Request.TeacherRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
 import com.school.SchoolManagement.Dto.Response.TeacherResponse;
+import com.school.SchoolManagement.Entity.Stream;
 import com.school.SchoolManagement.Entity.Teacher;
 import com.school.SchoolManagement.Implementation.TeacherImpl;
+import com.school.SchoolManagement.Repository.StreamRepository;
 import com.school.SchoolManagement.Repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,9 @@ import static com.school.SchoolManagement.Constrants.RestMappingConstraints.*;
 public class TeacherService implements TeacherImpl {
     @Autowired
     private TeacherRepository teacherRepository;
+
+    @Autowired
+    private StreamRepository streamRepository;
 
     @Override
     public BaseApiResponse findAllTeacher() {
@@ -85,24 +90,34 @@ public class TeacherService implements TeacherImpl {
     @Override
     public BaseApiResponse createOrUpdateTeacher(TeacherRequest teacherRequest) {
         try {
-            Teacher teacher = mapToEntity(teacherRequest);
+            if ((teacherRequest.getId() == null || teacherRequest.getId() >= 0) && teacherRequest.getStreamId()>=0){
+                Teacher teacher = mapToEntity(teacherRequest);
 
-            if (teacherRequest.getId() == null || teacherRequest.getId() == 0) {
-                teacherRepository.save(teacher);
-                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_CREATED, teacher);
-            } else {
-                Optional<Teacher> existingTeacherOpt = teacherRepository.findById(teacher.getId());
-                if (existingTeacherOpt.isPresent()) {
-                    Teacher existingTeacher = existingTeacherOpt.get();
-                    updateEntity(existingTeacher, teacherRequest);
-                    teacherRepository.save(existingTeacher);
-                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_UPDATED, existingTeacher);
+                if (teacherRequest.getId() == null || teacherRequest.getId() == 0) {
+                    Optional<Stream> stream = streamRepository.findById(teacherRequest.getStreamId());
+                    if(teacherRequest.getStreamId() == 0 || stream.isPresent()){
+                        teacherRepository.save(teacher);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_CREATED, teacher);
+                    } else {
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STREAM_NOT_FOUND, Collections.emptyList());
+                    }
+
                 } else {
-                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    Optional<Teacher> existingTeacherOpt = teacherRepository.findById(teacher.getId());
+                    if (existingTeacherOpt.isPresent()) {
+                        Teacher existingTeacher = existingTeacherOpt.get();
+                        updateEntity(existingTeacher, teacherRequest);
+                        teacherRepository.save(existingTeacher);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_UPDATED, existingTeacher);
+                    } else {
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    }
                 }
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
             }
         } catch (Exception e) {
-            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
+            return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, e.getMessage(), Collections.emptyList());
         }
     }
 
@@ -163,14 +178,13 @@ public class TeacherService implements TeacherImpl {
                 teacher.getSpecialization(),
                 teacher.getHireDate(),
                 teacher.getStreamId(),
-                teacher.getCourseId(),
                 teacher.getEmail()
         );
     }
 
     private Teacher mapToEntity(TeacherRequest request) {
         return new Teacher(
-                null,
+                request.getId(),
                 request.getTeacherName(),
                 request.getDob(),
                 request.getGender(),
@@ -180,8 +194,7 @@ public class TeacherService implements TeacherImpl {
                 request.getSpecialization(),
                 new Date(),
                 true,
-                request.getSteamId(),
-                request.getCourseId(),
+                request.getStreamId(),
                 request.getEmail()
         );
     }

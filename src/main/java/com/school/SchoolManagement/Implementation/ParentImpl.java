@@ -9,6 +9,7 @@ import java.util.List;
 public interface ParentImpl {
     BaseApiResponse findAllParent();
     BaseApiResponse findById(Long id);
+    BaseApiResponse findByStudentsParentId(Long id);
     BaseApiResponse findByEmail(String email);
     BaseApiResponse findByParentName(String username);
     BaseApiResponse createOrUpdateParent(ParentRequest parentRequest);

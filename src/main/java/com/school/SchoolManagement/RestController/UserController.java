@@ -102,7 +102,7 @@ public class UserController {
     public ResponseEntity<BaseApiResponse> delete(@RequestBody SearchRequest searchRequest) {
         try {
             BaseApiResponse baseApiResponse = new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
-            if (searchRequest.getId() != null && searchRequest.getId() != 0) {
+            if (searchRequest.getId() != null && searchRequest.getId() >= 0) {
                 baseApiResponse = userImpl.deleteUser(searchRequest.getId());
             } else if (!StringUtil.isNullOrEmpty(searchRequest.getEmail()) && commonUtils.isValidEmail(searchRequest.getEmail())) {
                 baseApiResponse = userImpl.deleteUserByEmail(searchRequest.getEmail());

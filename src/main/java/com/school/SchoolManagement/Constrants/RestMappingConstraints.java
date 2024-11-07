@@ -20,7 +20,7 @@ public interface RestMappingConstraints {
         String ADMIN_DELETE_API = "/admin/delete";
 
 
-        String STUDENT_PROFILE_API = "/student";
+        String STUDENT_PROFILE_API = "/student/profile";
         String STUDENT_FETCH_API = "/student/fetch";
         String STUDENT_FETCH_BY_ID_API = "/student/fetchbyid";
         String STUDENT_CREATE_API = "/student/create";
@@ -69,12 +69,20 @@ public interface RestMappingConstraints {
         String LIBRARIAN_BATCH_API = "/librarian/batch";
         String LIBRARIAN_DELETE_API = "/librarian/delete";
 
+        String FEES_PAYMENT_FETCH_API = "/payment/fetch";
+        String FEES_PAYMENT_API = "/payment";
+
+        String BOOKLOAN_FETCH_API = "/bookloan/fetch";
+        String BOOKLOAN_CREATE_API = "/bookloan/create";
+
     }
 
     interface MESSAGE_NAMES {
         // COMMON MESSAGES
         String ID_NOT_ACCEPTABLE = "Id's Not Acceptable";
-        String NOT_ACCEPTABLE = "Id's Not Acceptable";
+        String REQUEST_NOT_ACCEPTABLE = "Request Not Acceptable";
+        String TRY_AGAIN = "PLEASE TRY AGAIN";
+        String TOKEN_NOT_VALID = "Token not valid.";
 
         // USER API MESSAGE_NAMES
         String USER_CREATED = "User successfully created.";
@@ -136,18 +144,33 @@ public interface RestMappingConstraints {
         String BOOK_FETCHED = "Book successfully fetched.";
         String BOOK_UPDATED = "Book information updated.";
         String BOOK_DELETED = "Book successfully deleted.";
+        String BOOK_NOT_FOUND = "Book not Found.";
 
         // STREAM API MESSAGE_NAMES
         String STREAM_CREATED = "Stream successfully created.";
         String STREAM_FETCHED = "Stream successfully fetched.";
         String STREAM_UPDATED = "Stream information updated.";
         String STREAM_DELETED = "Stream successfully deleted.";
+        String STREAM_NOT_FOUND = "Stream not Found.";
 
         // SUBJECT API MESSAGE_NAMES
         String SUBJECT_CREATED = "Subject successfully created.";
         String SUBJECT_FETCHED = "Subject successfully fetched.";
         String SUBJECT_UPDATED = "Subject information updated.";
         String SUBJECT_DELETED = "Subject successfully deleted.";
+
+        // FEES API MESSAGE_NAMES
+        String FEES_PAYMENT_COMPLETED = "Fees payment completed.";
+        String FEES_PAYMENT_INCOMPLETE = "Fees payment incomplete.";
+        String FEES_PAYMENT_FETCHED = "Fees payment fetched.";
+        String INVALID_PAYMENT = "Fee payment Invalid.";
+
+        // BOOK LOAN API MESSAGE_NAMES
+        String BOOK_ALREADY_RETURN = "The book has already been returned.";
+        String BOOK_ALREADY_BORROWED = "The student has already borrowed this book.";
+        String BOOK_BORROWED = "The student has borrowed this book.";
+        String BOOK_RETURNED = "The student has returned this book.";
+        String BOOKLOAN_FETCHED = "Book loan fetched.";
 
         // COMMON STATUS_MESSAGES
         String OPERATION_SUCCESS = "Operation completed successfully.";

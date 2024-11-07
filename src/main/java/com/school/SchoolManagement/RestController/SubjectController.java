@@ -1,6 +1,7 @@
 package com.school.SchoolManagement.RestController;
 
 import ch.qos.logback.core.util.StringUtil;
+import com.school.SchoolManagement.Dto.Request.SearchRequestDto.CommonRequestDto;
 import com.school.SchoolManagement.Dto.Request.SearchRequestDto.CommonSearchRequest;
 import com.school.SchoolManagement.Dto.Request.SubjectRequest;
 import com.school.SchoolManagement.Dto.Response.BaseApiResponse;
@@ -26,14 +27,25 @@ public class SubjectController {
 
     @PostMapping(DEFINE_API.SUBJECT_FETCH_API)
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER', 'STUDENT', 'LIBRARIAN', 'PARENT')")
-    public ResponseEntity<BaseApiResponse> getAll() {
+    public ResponseEntity<BaseApiResponse> getAll(@RequestBody CommonRequestDto request) {
         try {
-            BaseApiResponse subjects = subjectImpl.findAll();
-            if (subjects.getSuccess() == 1) {
-                return ResponseEntity.status(HttpStatus.OK).body(subjects);
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(subjects);
+            if(request.getId() == 0 || request.getId() == null){
+                BaseApiResponse subjects = subjectImpl.findAll();
+                if (subjects.getSuccess() == 1) {
+                    return ResponseEntity.status(HttpStatus.OK).body(subjects);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(subjects);
+                }
             }
+            else {
+                BaseApiResponse subjects = subjectImpl.findByStandard(request.getId());
+                if (subjects.getSuccess() == 1) {
+                    return ResponseEntity.status(HttpStatus.OK).body(subjects);
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(subjects);
+                }
+            }
+
         } catch (Exception e) {
             BaseApiResponse errorResponse = new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
@@ -41,7 +53,7 @@ public class SubjectController {
     }
 
     @PostMapping(DEFINE_API.SUBJECT_FETCH_BY_ID_API)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public ResponseEntity<BaseApiResponse> getById(@RequestBody CommonSearchRequest searchRequest) {
         try {
             if (StringUtil.isNullOrEmpty(searchRequest.getName()) && (searchRequest.getId() == null || searchRequest.getId() == 0) ) {
@@ -69,7 +81,6 @@ public class SubjectController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
 
     @PostMapping(DEFINE_API.SUBJECT_CREATE_API)
     @PreAuthorize("hasRole('ADMIN')")
@@ -117,7 +128,5 @@ public class SubjectController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
-
 
 }

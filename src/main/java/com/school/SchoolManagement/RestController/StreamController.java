@@ -42,7 +42,7 @@ public class StreamController {
     }
 
     @PostMapping(DEFINE_API.STREAM_FETCH_BY_ID_API)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     public ResponseEntity<BaseApiResponse> getById(@RequestBody StreamSearchRequest searchRequest) {
         try {
             if (StringUtil.isNullOrEmpty(searchRequest.getName()) && (searchRequest.getId() == null || searchRequest.getId() == 0) && searchRequest.getStreamHeadId() == null ) {

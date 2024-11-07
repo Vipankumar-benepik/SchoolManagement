@@ -87,21 +87,25 @@ public class LibraryService implements LibraryImpl {
     @Override
     public BaseApiResponse createOrUpdateBook(BookRequest bookRequest) {
         try{
-            Book book = mapToEntity(bookRequest);
+            if (bookRequest.getId() == null || bookRequest.getId() >= 0){
+                Book book = mapToEntity(bookRequest);
 
-            if (bookRequest.getId() == null || bookRequest.getId() == 0) {
-                libraryRepository.save(book);
-                return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_CREATED, RestMappingConstraints.SUCCESS_STATUS.SUCCESS, RestMappingConstraints.MESSAGE_NAMES.BOOK_CREATED, book);
-            } else {
-                Optional<Book> existingBooksOpt = libraryRepository.findById(bookRequest.getId());
-                if (existingBooksOpt.isPresent()) {
-                    Book existingBook = existingBooksOpt.get();
-                    updateEntity(existingBook, bookRequest);
-                    libraryRepository.save(existingBook);
-                    return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_ACCEPTED, RestMappingConstraints.SUCCESS_STATUS.SUCCESS, RestMappingConstraints.MESSAGE_NAMES.BOOK_UPDATED, existingBook);
+                if (bookRequest.getId() == null || bookRequest.getId() == 0) {
+                    libraryRepository.save(book);
+                    return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_CREATED, RestMappingConstraints.SUCCESS_STATUS.SUCCESS, RestMappingConstraints.MESSAGE_NAMES.BOOK_CREATED, book);
                 } else {
-                    return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_NOT_FOUND, RestMappingConstraints.SUCCESS_STATUS.FAILURE, RestMappingConstraints.MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    Optional<Book> existingBooksOpt = libraryRepository.findById(bookRequest.getId());
+                    if (existingBooksOpt.isPresent()) {
+                        Book existingBook = existingBooksOpt.get();
+                        updateEntity(existingBook, bookRequest);
+                        libraryRepository.save(existingBook);
+                        return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_ACCEPTED, RestMappingConstraints.SUCCESS_STATUS.SUCCESS, RestMappingConstraints.MESSAGE_NAMES.BOOK_UPDATED, existingBook);
+                    } else {
+                        return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_NOT_FOUND, RestMappingConstraints.SUCCESS_STATUS.FAILURE, RestMappingConstraints.MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    }
                 }
+            } else {
+                return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_NOT_ACCEPTABLE, RestMappingConstraints.SUCCESS_STATUS.FAILURE, RestMappingConstraints.MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
             }
         } catch (Exception e) {
             return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, RestMappingConstraints.SUCCESS_STATUS.FAILURE, RestMappingConstraints.MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
@@ -146,7 +150,6 @@ public class LibraryService implements LibraryImpl {
             return new BaseApiResponse(RestMappingConstraints.STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, RestMappingConstraints.SUCCESS_STATUS.FAILURE, RestMappingConstraints.MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
     }
-
 
     private void updateEntity(Book book, BookRequest request) {
         book.setTitle(request.getTitle());

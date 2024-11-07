@@ -20,7 +20,5 @@ public class ParentResponse {
     private String address;
     private String phone;
 
-    private Long studentId;
-
     private String email;
 }

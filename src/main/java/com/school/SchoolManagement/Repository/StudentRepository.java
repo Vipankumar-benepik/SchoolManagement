@@ -11,5 +11,7 @@ import java.util.List;
 @Repository
 public interface StudentRepository extends GenericRepository<Student, Long> {
     Student findByEmail(String email);
+    List<Student> findByParentId(Long id);
     List<Student> findByStudentName(String username);
+    List<Student> findByStandard(Integer standardId);
 }

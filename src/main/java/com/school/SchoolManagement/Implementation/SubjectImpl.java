@@ -7,6 +7,7 @@ public interface SubjectImpl {
     BaseApiResponse findAll();
     BaseApiResponse findById(Long id);
     BaseApiResponse findByName(String subjectName);
+    BaseApiResponse findByStandard(Integer standardId);
     BaseApiResponse createOrUpdate(SubjectRequest subjectRequest);
     BaseApiResponse delete(Long id);
     BaseApiResponse deleteByName(String subjectName);

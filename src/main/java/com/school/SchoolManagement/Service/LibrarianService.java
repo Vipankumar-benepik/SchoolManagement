@@ -85,21 +85,25 @@ public class LibrarianService implements LibrarianImpl {
     @Override
     public BaseApiResponse createOrUpdate(LibrarianRequest librarianRequest) {
         try {
-            Librarian librarian = mapToEntity(librarianRequest);
+            if (librarianRequest.getId() == null || librarianRequest.getId() >= 0){
+                Librarian librarian = mapToEntity(librarianRequest);
 
-            if (librarianRequest.getId() == null || librarianRequest.getId() == 0) {
-                librarianRepository.save(librarian);
-                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_CREATED, librarian);
-            } else {
-                Optional<Librarian> existingLibrarianOpt = librarianRepository.findById(librarian.getId());
-                if (existingLibrarianOpt.isPresent()) {
-                    Librarian existingLibrarian = existingLibrarianOpt.get();
-                    updateEntity(existingLibrarian, librarianRequest);
-                    librarianRepository.save(existingLibrarian);
-                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_UPDATED, existingLibrarian);
+                if (librarianRequest.getId() == null || librarianRequest.getId() == 0) {
+                    librarianRepository.save(librarian);
+                    return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_CREATED, librarian);
                 } else {
-                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    Optional<Librarian> existingLibrarianOpt = librarianRepository.findById(librarian.getId());
+                    if (existingLibrarianOpt.isPresent()) {
+                        Librarian existingLibrarian = existingLibrarianOpt.get();
+                        updateEntity(existingLibrarian, librarianRequest);
+                        librarianRepository.save(existingLibrarian);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_UPDATED, existingLibrarian);
+                    } else {
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    }
                 }
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
             }
         } catch (Exception e) {
             return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());

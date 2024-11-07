@@ -1,12 +1,14 @@
 package com.school.SchoolManagement.Config;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.SchoolManagement.JWT.AuthTokenFilter;
 import com.school.SchoolManagement.Service.AuthService.UserPrinciple;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -23,10 +25,13 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class ServiceConfig {
+public class SecurityConfig {
 
     @Autowired
     private AuthTokenFilter authTokenFilter;
@@ -55,7 +60,17 @@ public class ServiceConfig {
     @Bean
     public AuthenticationEntryPoint unauthorizedEntryPoint() {
         return (request, response, authException) -> {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+            final Map<String, Object> body = new HashMap<>();
+            body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+            body.put("error", "Unauthorized");
+            body.put("message", "Authentication is required to access this resource.");
+            body.put("path", request.getServletPath());
+
+            final ObjectMapper mapper = new ObjectMapper();
+            mapper.writeValue(response.getOutputStream(), body);
         };
     }
 
@@ -70,15 +85,15 @@ public class ServiceConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/api/auth/login", "/api/user/register", "/swagger", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
-                                .requestMatchers("/api/schoolmanagement/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER", "PARENT")
+                                .requestMatchers("/api/schoolmanagement/**").hasAnyRole("ADMIN", "STUDENT", "TEACHER", "PARENT", "LIBRARIAN")
 //                                .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN","STUDENT")
 //                                .requestMatchers("/api/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
-                .exceptionHandling(exceptionHandling ->
-                        exceptionHandling.authenticationEntryPoint(authEntryPointConfig))
 //                .exceptionHandling(exceptionHandling ->
-//                        exceptionHandling.authenticationEntryPoint(unauthorizedEntryPoint()))
+//                        exceptionHandling.authenticationEntryPoint(authEntryPointConfig))
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling.authenticationEntryPoint(unauthorizedEntryPoint()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions
                 )

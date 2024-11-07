@@ -29,7 +29,6 @@ public class TeacherController {
     @Autowired
     private CommonUtils commonUtils;
 
-
     @PostMapping(DEFINE_API.TEACHER_FETCH_API)
     @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public ResponseEntity<BaseApiResponse> getAll() {

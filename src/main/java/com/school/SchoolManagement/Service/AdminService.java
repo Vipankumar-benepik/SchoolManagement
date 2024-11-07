@@ -48,13 +48,18 @@ public class AdminService implements AdminImpl {
 
     public BaseApiResponse findById(Long id) {
         try{
-            Admin admin = adminRepository.findById(id).orElseThrow(() -> new RuntimeException("Admin not Found"));
-            if (admin.getStatus()) {
-                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, admin);
+            if (id > 0) {
+                Admin admin = adminRepository.findById(id).orElseThrow(() -> new RuntimeException("Admin not Found"));
+                if (admin.getStatus()) {
+                    return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_FETCHED, admin);
+                }
+                else {
+                    return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
+                }
+            } else {
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
             }
-            else {
-                return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
-            }
+
         } catch (Exception e) {
             if(e.getMessage().equals("Admin not Found")){
                 return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
@@ -92,25 +97,32 @@ public class AdminService implements AdminImpl {
 
     public BaseApiResponse createOrUpdateAdmin(AdminRequest adminRequest) {
         try{
-            Admin admin = mapToEntity(adminRequest);
+            if (adminRequest.getId() == null || adminRequest.getId() >= 0) {
+                Admin admin = mapToEntity(adminRequest);
 
-            if (adminRequest.getId() == null || adminRequest.getId() == 0) {
-                adminRepository.save(admin);
-                return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_CREATED, admin);
-            } else {
-                Optional<Admin> existingAdminOpt = adminRepository.findById(adminRequest.getId());
-                if (existingAdminOpt.isPresent()) {
-                    Admin existingAdmin = existingAdminOpt.get();
-                    updateEntity(existingAdmin, adminRequest);
-                    adminRepository.save(existingAdmin);
-                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_UPDATED, existingAdmin);
-                } else {
-                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
-                }
+//                if (adminRequest.getId() == null || adminRequest.getId() == 0) {
+////                    adminRepository.save(admin);
+////                    return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_CREATED, admin);
+//                } else {
+                    Optional<Admin> existingAdminOpt = adminRepository.findById(adminRequest.getId());
+                    if (existingAdminOpt.isPresent()) {
+                        Admin existingAdmin = existingAdminOpt.get();
+                        updateEntity(existingAdmin, adminRequest);
+                        adminRepository.save(existingAdmin);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_UPDATED, existingAdmin);
+                    } else {
+                        adminRepository.save(admin);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.ADMIN_CREATED, admin);
+//                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.DATA_NOT_FOUND, Collections.emptyList());
+                    }
+//                }
+//            } else {
+//                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
             }
         } catch (Exception e) {
             return new BaseApiResponse(STATUS_CODES.HTTP_INTERNAL_SERVER_ERROR, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.SOMETHING_WENT_WRONG, Collections.emptyList());
         }
+        return null;
     }
 
     public BaseApiResponse createMultiple(List<AdminRequest> adminRequests){

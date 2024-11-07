@@ -79,7 +79,6 @@ public class AdminController {
         }
     }
 
-
     @PostMapping(DEFINE_API.ADMIN_CREATE_API)
     public ResponseEntity<BaseApiResponse> createOrUpdate(@RequestBody Checksum checksum) throws Exception {
 
@@ -102,7 +101,6 @@ public class AdminController {
             }
         }
 
-        System.out.println("This is test");
         try {
             if (StringUtil.isNullOrEmpty(request.getEmail()) || StringUtil.isNullOrEmpty(request.getAdminName()) || request.getAdminName().length() < 3 || !commonUtils.isValidEmail(request.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseApiResponse(STATUS_CODES.HTTP_BAD_REQUEST, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.INVALID_REQUEST, Collections.emptyList()));

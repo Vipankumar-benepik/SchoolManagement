@@ -53,12 +53,17 @@ public class UserService implements UserImpl {
 
     public BaseApiResponse findById(Long id) {
         try {
-            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not Found"));
-            if (user.getStatus()) {
-                return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_FETCHED, user);
+            if (id > 0) {
+                User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not Found"));
+                if (user.getStatus()) {
+                    return new BaseApiResponse(STATUS_CODES.HTTP_OK, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_FETCHED, user);
+                } else {
+                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
+                }
             } else {
-                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
             }
+
         } catch (Exception e) {
             if (e.getMessage().equals("User not Found")) {
                 return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
@@ -82,109 +87,104 @@ public class UserService implements UserImpl {
 
     public BaseApiResponse createOrUpdateUser(UserRequest userRequest) {
         try {
-            User user = mapToEntity(userRequest);
+            if ((userRequest.getId() == null || userRequest.getId() >= 0) && userRequest.getRefId() >= 0) {
+                User user = mapToEntity(userRequest);
 
-            if (userRequest.getId() == null || userRequest.getId() == 0) {
-                if (userRequest.getRole().equals(Role.ADMIN)) {
-                    Admin existingAdmin = adminRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Admin not Found"));
-                    if (existingAdmin != null && existingAdmin.getEmail().equals(userRequest.getEmail())) {
-                        user.setEmail(existingAdmin.getEmail());
-                        user.setRole(userRequest.getRole());
-                        System.out.println("UserRequest role: " + userRequest.getRole());
-                        System.out.println("User Entity role: " + user.getRole());
-                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-                        System.out.println("This is user Password " + user.getPassword());
-                        System.out.println("This is password " + passwordEncoder.encode(user.getPassword()));
-                        userRepository.save(user);
-                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
-                    } else {
-                        if (!existingAdmin.getEmail().equals(userRequest.getEmail())) {
-                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                if (userRequest.getId() == null || userRequest.getId() == 0) {
+                    if (userRequest.getRole().equals(Role.ADMIN)) {
+                        Admin existingAdmin = adminRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Admin not Found"));
+                        if (existingAdmin != null && existingAdmin.getEmail().equals(userRequest.getEmail()) && existingAdmin.getStatus()) {
+                            user.setEmail(existingAdmin.getEmail());
+                            user.setRole(userRequest.getRole());
+                            System.out.println("UserRequest role: " + userRequest.getRole());
+                            System.out.println("User Entity role: " + user.getRole());
+                            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                            System.out.println("This is user Password " + user.getPassword());
+                            System.out.println("This is password " + passwordEncoder.encode(user.getPassword()));
+                            userRepository.save(user);
+                            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
+                        } else {
+                            if (!existingAdmin.getEmail().equals(userRequest.getEmail())) {
+                                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                            }
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_ID_NOT_FOUND, Collections.emptyList());
                         }
-                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ADMIN_REF_ID_NOT_FOUND, user);
+                    } else if (userRequest.getRole().equals(Role.STUDENT)) {
+                        Student existingStudent = studentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Student not Found"));
+                        if (existingStudent != null && existingStudent.getEmail().equals(userRequest.getEmail())) {
+                            user.setEmail(existingStudent.getEmail());
+                            user.setRole(userRequest.getRole());
+                            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                            userRepository.save(user);
+                            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
+                        } else {
+                            if (!existingStudent.getEmail().equals(userRequest.getEmail())) {
+                                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                            }
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_ID_NOT_FOUND, user);
+                        }
+                    } else if (userRequest.getRole().equals(Role.TEACHER)) {
+                        Teacher existingTeacher = teacherRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Teacher not Found"));
+                        if (existingTeacher != null && existingTeacher.getEmail().equals(userRequest.getEmail())) {
+                            user.setEmail(existingTeacher.getEmail());
+                            user.setRole(userRequest.getRole());
+                            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                            userRepository.save(user);
+                            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_CREATED, user);
+                        } else {
+                            if (!existingTeacher.getEmail().equals(userRequest.getEmail())) {
+                                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.TEACHER_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                            }
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.TEACHER_REF_ID_NOT_FOUND, user);
+                        }
+                    } else if (userRequest.getRole().equals(Role.PARENT)) {
+                        Parent existingParent = parentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Parent not Found"));
+                        if (existingParent != null && existingParent.getEmail().equals(userRequest.getEmail())) {
+                            user.setEmail(existingParent.getEmail());
+                            user.setRole(userRequest.getRole());
+                            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                            userRepository.save(user);
+                            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_CREATED, user);
+                        } else {
+                            if (!existingParent.getEmail().equals(userRequest.getEmail())) {
+                                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.PARENT_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                            }
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.PARENT_REF_ID_NOT_FOUND, user);
+                        }
+                    } else if (userRequest.getRole().equals(Role.LIBRARIAN)) {
+                        Librarian existingLibrarian = librarianRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Librarian not Found"));
+                        if (existingLibrarian != null && existingLibrarian.getEmail().equals(userRequest.getEmail())) {
+                            user.setEmail(existingLibrarian.getEmail());
+                            user.setRole(userRequest.getRole());
+                            user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
+                            System.out.println(user.toString());
+                            userRepository.save(user);
+                            return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_CREATED, user);
+                        } else {
+                            if (!existingLibrarian.getEmail().equals(userRequest.getEmail())) {
+                                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.LIBRARIAN_REF_EMAIL_NOT_FOUND, Collections.emptyList());
+                            }
+                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.LIBRARIAN_REF_ID_NOT_FOUND, user);
+                        }
+                    }
+
+                } else {
+                    Optional<User> existingUserOpt = userRepository.findById(userRequest.getId());
+                    if (existingUserOpt.isPresent()) {
+                        User existingUser = existingUserOpt.get();
+                        updateEntity(existingUser, userRequest);
+                        userRepository.save(existingUser);
+                        return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_UPDATED, existingUser);
+                    } else {
+                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
                     }
                 }
 
-
-                else if (userRequest.getRole().equals(Role.STUDENT)) {
-                    Student existingStudent = studentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Student not Found"));
-                    if (existingStudent != null && existingStudent.getEmail().equals(userRequest.getEmail())) {
-                        user.setEmail(existingStudent.getEmail());
-                        user.setRole(userRequest.getRole());
-                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-                        userRepository.save(user);
-                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_CREATED, user);
-                    } else {
-                        if (!existingStudent.getEmail().equals(userRequest.getEmail())) {
-                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_EMAIL_NOT_FOUND, Collections.emptyList());
-                        }
-                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.STUDENT_REF_ID_NOT_FOUND, user);
-                    }
-                }
-
-
-                else if (userRequest.getRole().equals(Role.TEACHER)) {
-                    Teacher existingTeacher = teacherRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Teacher not Found"));
-                    if (existingTeacher != null && existingTeacher.getEmail().equals(userRequest.getEmail())) {
-                        user.setEmail(existingTeacher.getEmail());
-                        user.setRole(userRequest.getRole());
-                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-                        userRepository.save(user);
-                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.TEACHER_CREATED, user);
-                    } else {
-                        if(!existingTeacher.getEmail().equals(userRequest.getEmail())){
-                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.TEACHER_REF_EMAIL_NOT_FOUND, Collections.emptyList());
-                        }
-                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.TEACHER_REF_ID_NOT_FOUND, user);
-                    }
-                }
-
-                else if (userRequest.getRole().equals(Role.PARENT)) {
-                    Parent existingParent = parentRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Parent not Found"));
-                    if (existingParent != null && existingParent.getEmail().equals(userRequest.getEmail())) {
-                        user.setEmail(existingParent.getEmail());
-                        user.setRole(userRequest.getRole());
-                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-                        userRepository.save(user);
-                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.PARENT_CREATED, user);
-                    } else {
-                        if(!existingParent.getEmail().equals(userRequest.getEmail())){
-                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.PARENT_REF_EMAIL_NOT_FOUND, Collections.emptyList());
-                        }
-                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.PARENT_REF_ID_NOT_FOUND, user);
-                    }
-                }
-
-                else if (userRequest.getRole().equals(Role.LIBRARIAN)) {
-                    Librarian existingLibrarian = librarianRepository.findById(userRequest.getRefId()).orElseThrow(() -> new RuntimeException("Librarian not Found"));
-                    if (existingLibrarian != null && existingLibrarian.getEmail().equals(userRequest.getEmail())) {
-                        user.setEmail(existingLibrarian.getEmail());
-                        user.setRole(userRequest.getRole());
-                        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-                        System.out.println(user.toString());
-                        userRepository.save(user);
-                        return new BaseApiResponse(STATUS_CODES.HTTP_CREATED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.LIBRARIAN_CREATED, user);
-                    } else {
-                        if(!existingLibrarian.getEmail().equals(userRequest.getEmail())){
-                            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.LIBRARIAN_REF_EMAIL_NOT_FOUND, Collections.emptyList());
-                        }
-                        return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.LIBRARIAN_REF_ID_NOT_FOUND, user);
-                    }
-                }
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.REQUEST_NOT_ACCEPTABLE, Collections.emptyList());
 
             } else {
-                Optional<User> existingUserOpt = userRepository.findById(userRequest.getId());
-                if (existingUserOpt.isPresent()) {
-                    User existingUser = existingUserOpt.get();
-                    updateEntity(existingUser, userRequest);
-                    userRepository.save(existingUser);
-                    return new BaseApiResponse(STATUS_CODES.HTTP_ACCEPTED, SUCCESS_STATUS.SUCCESS, MESSAGE_NAMES.USER_UPDATED, existingUser);
-                } else {
-                    return new BaseApiResponse(STATUS_CODES.HTTP_NOT_FOUND, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.USER_NOT_FOUND, Collections.emptyList());
-                }
+                return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.ID_NOT_ACCEPTABLE, Collections.emptyList());
             }
-
-            return new BaseApiResponse(STATUS_CODES.HTTP_NOT_ACCEPTABLE, SUCCESS_STATUS.FAILURE, MESSAGE_NAMES.NOT_ACCEPTABLE, Collections.emptyList());
 
         } catch (Exception e) {
             if (e.getMessage().equals("Student not Found")) {
