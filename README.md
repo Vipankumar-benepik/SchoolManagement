@@ -169,16 +169,3 @@ The project is configured for **Azure SQL Database** as the cloud database backe
 3. Build the JAR: `mvn clean package`
 4. Deploy the JAR to your preferred hosting (Azure App Service, AWS EC2, etc.)
 
----
-
-## 👨‍💻 Author
-
-**Vipan Kumar**
-- GitHub: [@Vipankumar-benepik](https://github.com/Vipankumar-benepik)
-- Organization: [Benepik](https://github.com/Vipankumar-benepik)
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
